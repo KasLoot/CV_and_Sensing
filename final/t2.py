@@ -266,7 +266,9 @@ def fit_circle_ransac(mask, max_iterations=2000, distance_threshold=2.0):
         plt.legend()
         plt.title(f"RANSAC Fit (Inliers: {max_inliers}/{len(points)})")
         plt.axis('off')
-        plt.show()
+        plt.savefig('ransac_circle_fit.png', bbox_inches='tight', pad_inches=0.1)
+        # plt.show()
+        plt.clf()
         
         return [cx, cy]
     else:
@@ -355,7 +357,8 @@ def track_earth_center(img1_path, img2_path, old_center):
         plt.figure(figsize=(12, 6))
         plt.imshow(img_matches)
         plt.title(f"Red: Old Center | Blue: New Center (Projected)")
-        plt.show()
+        plt.savefig('tracked_earth_center.png', bbox_inches='tight', pad_inches=0.1)
+        # plt.show()
         
         return new_center
 
