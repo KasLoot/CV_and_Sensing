@@ -192,7 +192,7 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     print("ROC curve comparison saved as 'roc_curve_comparison.png'")
 
 
-def get_safe_ocean_seeds(image: Image.Image):
+def get_safe_ocean_seeds(image: Image.Image, saturation_threshold: int = 120):
     copy_image = image.copy()
     
     # 1. Strong Blur (Earth features are large, noise is small)
@@ -217,7 +217,7 @@ def get_safe_ocean_seeds(image: Image.Image):
     # Clouds and Lights have very low saturation (near 0).
     # Deep Ocean has high saturation.
     # We require Saturation > 50 to avoid picking up white lights as seeds.
-    sat_mask = (S > 120)
+    sat_mask = (S > saturation_threshold)
 
     # Combine them
     final_seed_mask = blue_mask & sat_mask
@@ -229,8 +229,8 @@ def get_safe_ocean_seeds(image: Image.Image):
     return binary_seeds
 
 
-def threshold_and_region_growing(image: Image.Image, threshold: int):
-    binary_seeds = get_safe_ocean_seeds(image)
+def threshold_and_region_growing(image: Image.Image, threshold: int, saturation_threshold: int = 120):
+    binary_seeds = get_safe_ocean_seeds(image, saturation_threshold=saturation_threshold)
     # plt.imshow(binary_seeds, cmap='gray')
     # plt.axis('off')
     # plt.show()
@@ -252,13 +252,65 @@ def threshold_and_region_growing(image: Image.Image, threshold: int):
 
     return combined_segmented_image
 
+
+def YoudensJ_evaluation(image: Image.Image, ground_truth_image: Image.Image):
+    gt_array = np.array(ground_truth_image)
+
+    saturations = range(0, 256, 10)
+    thresholds = range(0, 256, 10)
+    
+    heatmap_data = np.zeros((len(saturations), len(thresholds)))
+
+    best_jouden_index = -1
+    best_saturation = -1
+    best_threshold = -1
+    
+    for i, sat in enumerate(tqdm(saturations, desc="Saturation levels")):
+        for j, thresh in enumerate(thresholds):
+            binary_image = threshold_and_region_growing(image, threshold=thresh, saturation_threshold=sat)
+            tp = np.sum((binary_image == 255) & (gt_array == 255))
+            tn = np.sum((binary_image == 0) & (gt_array == 0))
+            fp = np.sum((binary_image == 255) & (gt_array == 0))
+            fn = np.sum((binary_image == 0) & (gt_array == 255))
+
+            tpr = tp / (tp + fn + 1e-6)
+            fpr = fp / (fp + tn + 1e-6)
+
+            jouden_index = tpr - fpr
+            heatmap_data[i, j] = jouden_index
+
+            if jouden_index > best_jouden_index:
+                best_jouden_index = jouden_index
+                best_saturation = sat
+                best_threshold = thresh
+    
+    print(f"Best Youden's J Index: {best_jouden_index} at Saturation: {best_saturation}, Threshold: {best_threshold}")
+
+    plt.figure(figsize=(10, 8))
+    # extent=[x_min, x_max, y_max, y_min] to match image coordinates (y going down)
+    # x is threshold, y is saturation
+    plt.imshow(heatmap_data, extent=[0, 255, 255, 0], aspect='auto', cmap='viridis')
+    plt.colorbar(label="Youden's J Index")
+    plt.xlabel('Threshold')
+    plt.ylabel('Saturation')
+    plt.title("Youden's J Index Heatmap")
+    plt.savefig('youdens_j_heatmap.png')
+    print("Heatmap saved as 'youdens_j_heatmap.png'")
+    plt.clf()
+
+    return best_saturation, best_threshold
+    
+
+
 def main():
-    image = Image.open("/home/yuxin/CV_and_Sensing/final/Dataset_25/Easy/images/000016.png").convert("RGB")
-    ground_truth_image = Image.open("/home/yuxin/CV_and_Sensing/final/Dataset_25/Easy/masks/000016.png").convert("L")
+    image = Image.open("/home/yuxin/CV_and_Sensing/final/Dataset_25/Easy/images/000034.png").convert("RGB")
+    ground_truth_image = Image.open("/home/yuxin/CV_and_Sensing/final/Dataset_25/Easy/masks/000034.png").convert("L")
     # binary_image = threshoding(image, threshold=[0, 120])
     # plt.imshow(binary_image, cmap='gray')
     # plt.axis('off')
     # plt.show()
+    # region_growing(image, seed_point=(500, 500), threshold=50)
+
     # binary_seeds = get_safe_ocean_seeds(image)
     # plt.imshow(binary_seeds, cmap='gray')
     # plt.axis('off')
@@ -268,7 +320,7 @@ def main():
     # for y in range(0, binary_seeds.shape[0], 50):
     #     for x in range(0, binary_seeds.shape[1], 50):
     #         if binary_seeds[y, x] == 255:
-    #             print(f"Seed found at: ({x}, {y})")
+    #             # print(f"Seed found at: ({x}, {y})")
     #             segmented_image = region_growing(image, seed_point=(x, y), threshold=30)
     #             segmented_images.append(segmented_image)
     # # Combine all segmented images
@@ -279,12 +331,11 @@ def main():
     # plt.axis('off')
     # plt.show()
 
-    # combined_segmented_image = threshold_and_region_growing(image)
+    # combined_segmented_image = threshold_and_region_growing(image, threshold=30)
     
+    YoudensJ_evaluation(image, ground_truth_image)
 
-
-    # region_growing(image, seed_point=(500, 500), threshold=50)
-    draw_roc_curve(image, ground_truth_image)
+    # draw_roc_curve(image, ground_truth_image)
 
 
 if __name__ == "__main__":
