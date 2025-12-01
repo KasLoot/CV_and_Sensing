@@ -113,9 +113,9 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     plt.ylabel('True Positive')
     plt.title('ROC Curve')
     plt.grid()
-    plt.savefig('threshoding_roc_curve.png')
+    plt.savefig('threshoding_roc_curve_test.png')
     # plt.show()
-    print("ROC curve saved as 'threshoding_roc_curve.png'")
+    print("ROC curve saved as 'threshoding_roc_curve_test.png'")
     plt.clf()
 
     tp_region_growing = []
@@ -145,9 +145,9 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     plt.ylabel('True Positive')
     plt.title('ROC Curve for Region Growing')
     plt.grid()
-    plt.savefig('region_growing_roc_curve.png')
+    plt.savefig('region_growing_roc_curve_test.png')
     # plt.show()
-    print("ROC curve saved as 'region_growing_roc_curve.png'")
+    print("ROC curve saved as 'region_growing_roc_curve_test.png'")
     plt.clf()
 
     tp_combined = []
@@ -175,9 +175,9 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     plt.ylabel('True Positive')
     plt.title('ROC Curve for Combined Method')
     plt.grid()
-    plt.savefig('combined_roc_curve.png')
+    plt.savefig('combined_roc_curve_test.png')
     # plt.show()
-    print("ROC curve saved as 'combined_roc_curve.png'")
+    print("ROC curve saved as 'combined_roc_curve_test.png'")
     plt.clf()
 
     # plotting both curves together
@@ -189,9 +189,9 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     plt.title('ROC Curve Comparison')
     plt.legend()
     plt.grid()
-    plt.savefig('roc_curve_comparison.png')
+    plt.savefig('roc_curve_comparison_test.png')
     plt.show()
-    print("ROC curve comparison saved as 'roc_curve_comparison.png'")
+    print("ROC curve comparison saved as 'roc_curve_comparison_test.png'")
 
 
 def get_safe_ocean_seeds(hsv_img: Image.Image, saturation_threshold: int = 120):
@@ -320,8 +320,8 @@ def YoudensJ_evaluation(hsv_img: Image.Image, ground_truth_image: Image.Image):
     plt.xlabel('Threshold')
     plt.ylabel('Saturation')
     plt.title("Youden's J Index Heatmap")
-    plt.savefig('youdens_j_heatmap.png')
-    print("Heatmap saved as 'youdens_j_heatmap.png'")
+    plt.savefig('youdens_j_heatmap_test.png')
+    print("Heatmap saved as 'youdens_j_heatmap_test.png'")
     plt.clf()
 
     return best_saturation, best_threshold
@@ -361,9 +361,9 @@ def main():
 
     # combined_segmented_image = threshold_and_region_growing(image, threshold=30)
     
-    # YoudensJ_evaluation(hsv_img, ground_truth_image)
+    YoudensJ_evaluation(hsv_img, ground_truth_image)
 
-    draw_roc_curve(image, ground_truth_image)
+    # draw_roc_curve(image, ground_truth_image)
 
     # mask = threshold_and_region_growing(hsv_img, threshold=60, saturation_threshold=190)
     # plt.imshow(mask, cmap='gray')

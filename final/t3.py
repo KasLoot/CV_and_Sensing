@@ -266,9 +266,9 @@ def fit_circle_ransac(mask, max_iterations=2000, distance_threshold=2.0):
         plt.legend()
         plt.title(f"RANSAC Fit (Inliers: {max_inliers}/{len(points)})")
         plt.axis('off')
-        # plt.savefig('ransac_circle_fit.png', bbox_inches='tight', pad_inches=0.1)
-        plt.show()
-
+        plt.savefig('ransac_circle_fit.png', bbox_inches='tight', pad_inches=0.1)
+        # plt.show()
+        plt.clf()
         
         return [cx, cy]
     else:
@@ -358,7 +358,7 @@ def track_earth_center(img1_path, img2_path, old_center):
         plt.imshow(img_matches)
         plt.title(f"Red: Old Center | Blue: New Center (Projected)")
         plt.savefig('tracked_earth_center.png', bbox_inches='tight', pad_inches=0.1)
-        plt.show()
+        # plt.show()
         
         return new_center
 
@@ -366,39 +366,25 @@ def track_earth_center(img1_path, img2_path, old_center):
         print(f"Not enough matches found - {len(good_matches)}/{MIN_MATCH_COUNT}")
         return None
 
+# --- USAGE EXAMPLE ---
+# Replace with your actual image paths and the center coordinate you found via Region Growing
+# center_from_region_growing = (300, 250) 
+# new_coords = track_earth_center('earth_t0.jpg', 'earth_t1.jpg', center_from_region_growing)
 
 
 
-import os
+
 def main():
-    image_dir = "/home/yuxin/CV_and_Sensing/final/Dataset_25/task_2"
-    
-    centres = []
-    for file in os.listdir(image_dir):
-        if file.endswith(".jpg"):
-            image_path = os.path.join(image_dir, file)
-            image = Image.open(image_path).convert('RGB')
+    image_path = '/home/yuxin/CV_and_Sensing/final/Dataset_25/calibration_image_00_cam1.jpg'
+    image = Image.open(image_path).convert('RGB')
 
-            segmented_image = threshold_and_region_growing(image, threshold=30, saturation_threshold=120)
-            centre = fit_circle_ransac(segmented_image)
-            print(f"Old Centre: {centre}")
+    segmented_image = threshold_and_region_growing(image, threshold=30, saturation_threshold=120)
+    old_centre = fit_circle_ransac(segmented_image)
+    print(f"Old Centre: {old_centre}")
 
-            centres.append(centre)
-    
-    ref_img_path = os.path.join(image_dir, "calibration_image_00_cam1.jpg")
-    # plot the centres on the reference image
-    ref_image = Image.open(ref_img_path).convert('RGB')
-    plt.imshow(ref_image)
-    for centre in centres:
-        if centre is not None:
-            plt.scatter([centre[0]], [centre[1]], color='red', s=10)
-    plt.axis('off')
-    plt.savefig('centre_swing.png', bbox_inches='tight', pad_inches=0.1)
-    plt.show()
-
-    # track_earth_center('/home/yuxin/CV_and_Sensing/final/Dataset_25/calibration_image_00_cam1.jpg',
-    #                     '/home/yuxin/CV_and_Sensing/final/Dataset_25/calibration_image_01_cam1.jpg',
-    #                     old_centre)
+    track_earth_center('/home/yuxin/CV_and_Sensing/final/Dataset_25/calibration_image_00_cam1.jpg',
+                        '/home/yuxin/CV_and_Sensing/final/Dataset_25/calibration_image_01_cam1.jpg',
+                        old_centre)
 
 
 if __name__ == '__main__':
