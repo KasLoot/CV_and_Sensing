@@ -25,37 +25,6 @@ def threshoding(image: Image.Image, threshold: list):
     return binary_image
 
 
-def thresholding_for_seeds(image: Image.Image, lower_thresh: int, upper_thresh: int):
-    """
-    Returns a binary mask where Object = 255 (White) and Background = 0 (Black).
-    Handles Hue wrap-around for Red objects.
-    """
-    copy_image = image.copy()
-    
-    # 1. Blur to reduce noise (Good practice)
-    blurred_image = copy_image.filter(ImageFilter.GaussianBlur(radius=2))
-
-    hsv_img = blurred_image.convert("HSV")
-    hsv_array = np.array(hsv_img)
-    hue_channel = hsv_array[:, :, 0]
-
-    # 2. Logic to handle "Red" wrap-around (e.g., lower=240, upper=10)
-    if lower_thresh > upper_thresh:
-        # Case: Range crosses the 255/0 boundary (Red)
-        mask = (hue_channel >= lower_thresh) | (hue_channel <= upper_thresh)
-    else:
-        # Case: Standard range (Green, Blue, etc.)
-        mask = (hue_channel >= lower_thresh) & (hue_channel <= upper_thresh)
-
-    # 3. Create Binary Image (Correct Polarity for Region Growing)
-    # Initialize Black (0)
-    binary_image = np.zeros_like(hue_channel)
-    # Set Object to White (255)
-    binary_image[mask] = 255
-
-    return binary_image
-
-
 
 def region_growing(blurred_image: Image.Image, seed_point: tuple, threshold: int):
 # 1. Convert to HSV and extract Hue
