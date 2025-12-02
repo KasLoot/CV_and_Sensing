@@ -173,11 +173,11 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     plt.plot(false_positive_rate_combined, true_positive_rate_combined, marker='o', color='green')
     plt.xlabel('False Positive')
     plt.ylabel('True Positive')
-    plt.title('ROC Curve for Combined Method')
+    plt.title('ROC Curve for Thresholding + Region Growing')
     plt.grid()
-    plt.savefig('combined_roc_curve.png')
+    plt.savefig('threshold_region_growing_roc_curve.png')
     # plt.show()
-    print("ROC curve saved as 'combined_roc_curve.png'")
+    print("ROC curve saved as 'threshold_region_growing_roc_curve.png'")
     plt.clf()
 
     # plotting both curves together
@@ -231,6 +231,7 @@ def threshold_and_region_growing(hsv_image: Image.Image, threshold: int, saturat
     binary_seeds = get_safe_ocean_seeds(hsv_image, saturation_threshold=saturation_threshold)
     # plt.imshow(binary_seeds, cmap='gray')
     # plt.axis('off')
+    # plt.savefig('safe_ocean_seeds.png')
     # plt.show()
 
     segmented_images = []
@@ -329,15 +330,25 @@ def YoudensJ_evaluation(hsv_img: Image.Image, ground_truth_image: Image.Image):
 
 
 def main():
-    image = Image.open("/home/yuxin/CV_and_Sensing/final/Dataset_25/Easy/images/000032.png").convert("RGB")
-    ground_truth_image = Image.open("/home/yuxin/CV_and_Sensing/final/Dataset_25/Easy/masks/000032.png").convert("L")
+    image = Image.open("/Users/liuyuxin/Documents/CV_and_Sensing/final/Dataset_25/Easy/images/000016.png").convert("RGB")
+    ground_truth_image = Image.open("/Users/liuyuxin/Documents/CV_and_Sensing/final/Dataset_25/Easy/masks/000016.png").convert("L")
     blurred_image = image.copy().filter(ImageFilter.GaussianBlur(radius=2))
     hsv_img = blurred_image.convert("HSV")
     # binary_image = threshoding(image, threshold=[0, 120])
     # plt.imshow(binary_image, cmap='gray')
     # plt.axis('off')
+    # plt.savefig('threshoding_result.png')
     # plt.show()
-    # region_growing(image, seed_point=(500, 500), threshold=50)
+    # rg_binary = region_growing_2(hsv_img, seed_point=(500, 500), threshold=50)
+    # plt.imshow(rg_binary, cmap='gray')
+    # plt.axis('off')
+    # plt.savefig('region_growing_result.png')
+    # plt.show()
+    # combined_binary = threshold_and_region_growing(hsv_img, threshold=50)
+    # plt.imshow(combined_binary, cmap='gray')
+    # plt.axis('off')
+    # plt.savefig('threshold_and_region_growing_result.png')
+    # plt.show()
 
     # binary_seeds = get_safe_ocean_seeds(image)
     # plt.imshow(binary_seeds, cmap='gray')
@@ -361,9 +372,9 @@ def main():
 
     # combined_segmented_image = threshold_and_region_growing(image, threshold=30)
     
-    # YoudensJ_evaluation(hsv_img, ground_truth_image)
+    YoudensJ_evaluation(hsv_img, ground_truth_image)
 
-    draw_roc_curve(image, ground_truth_image)
+    # draw_roc_curve(image, ground_truth_image)
 
     # mask = threshold_and_region_growing(hsv_img, threshold=60, saturation_threshold=190)
     # plt.imshow(mask, cmap='gray')

@@ -371,7 +371,7 @@ def track_earth_center(img1_path, img2_path, old_center):
 
 import os
 def main():
-    image_dir = "/home/yuxin/CV_and_Sensing/final/Dataset_25/task_2"
+    image_dir = "/Users/liuyuxin/Documents/CV_and_Sensing/final/Dataset_25/task_2"
     
     centres = []
     for file in os.listdir(image_dir):

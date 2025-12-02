@@ -84,7 +84,7 @@ def run():
     # Assign individual options
     sift_extraction_options.num_threads = 8
     sift_extraction_options.max_image_size = 640
-    sift_extraction_options.max_num_features = 1000  # Increased to detect more features
+    sift_extraction_options.max_num_features = int(1e8)  # Increased to detect more features
 
     sift_extraction_options.normalization = pycolmap.Normalization.L1_ROOT
 
