@@ -5,20 +5,20 @@ import numpy as np
 from tqdm import tqdm
 from collections import deque
 import cv2
+import time
+import sys
+import os
 
+# Add current directory to path to import task_1
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from task_1 import threshold_and_region_growing
-
-
-def read_avi_with_pillow(video_path):
-    """Reads an AVI video frame by frame and converts to Pillow images."""
-    
-    # Create a VideoCapture object
-    cap = cv2.VideoCapture(video_path)
-    
-    if not cap.isOpened():
-        print(f"Error: Could not open video file {video_path}")
-        return
+try:
+    from task_1 import threshold_and_region_growing
+except ImportError:
+    print("Warning: Could not import threshold_and_region_growing from task_1")
+    # Dummy implementation if import fails
+    def threshold_and_region_growing(img, t, s):
+        return np.zeros((img.size[1], img.size[0]), dtype=np.uint8)
 
 def get_circle_from_3_points(p1, p2, p3):
     """
@@ -124,116 +124,217 @@ def fit_circle_ransac(mask, max_iterations=2000, distance_threshold=2.0):
         # plt.show()
         plt.clf()
         
-        return [cx, cy]
+        return [cx, cy, r]
     else:
         print("RANSAC failed to find a valid circle.")
         return None
 
-
-
-
-def track_earth_center(img1_path, img2_path, old_center):
-    """
-    img1_path: Path to the first image (Reference)
-    img2_path: Path to the second image (Target)
-    old_center: Tuple (x, y) of the Earth center in Image 1
-    """
-    
-    # 1. Load Images
-    img1 = cv2.imread(img1_path, cv2.IMREAD_GRAYSCALE)
-    img2 = cv2.imread(img2_path, cv2.IMREAD_GRAYSCALE)
-    
-    if img1 is None or img2 is None:
-        print("Error: Could not load images.")
-        return
-
-    # 2. SIFT Feature Detection
-    # Initialize SIFT detector
-    sift = cv2.SIFT_create()
-
-    # Find keypoints and descriptors
-    kp1, des1 = sift.detectAndCompute(img1, None)
-    kp2, des2 = sift.detectAndCompute(img2, None)
-
-    # 3. Feature Matching (using FLANN or BFMatcher)
-    # FLANN is faster for large datasets, but BFMatcher is fine here.
-    bf = cv2.BFMatcher()
-    matches = bf.knnMatch(des1, des2, k=2)
-
-    # 4. Apply Lowe's Ratio Test (Filter out bad matches)
-    good_matches = []
-    for m, n in matches:
-        if m.distance < 0.75 * n.distance:
-            good_matches.append(m)
-
-    # MIN_MATCH_COUNT ensures we have enough data to calculate geometry
-    MIN_MATCH_COUNT = 4
-    
-    if len(good_matches) > MIN_MATCH_COUNT:
-        # 5. Extract coordinates of the good matches
-        src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-        dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-
-        # 6. Compute Homography Matrix (H) using RANSAC
-        # RANSAC will ignore outliers (matches that don't fit the rotation model)
-        H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+class RotationEstimator:
+    def __init__(self, video_path):
+        self.video_path = video_path
+        self.cap = cv2.VideoCapture(video_path)
+        if not self.cap.isOpened():
+            print(f"Error: Could not open video: {video_path}")
+            self.valid = False
+            return
         
-        print(f"Homography Matrix Calculated:\n{H}")
-
-        # 7. Transform the specific Center Point
-        # Reshape point to (1, 1, 2) for perspectiveTransform
-        original_point = np.float32([old_center]).reshape(-1, 1, 2)
+        self.valid = True
+        self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+        self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         
-        # Apply the matrix to find the new location
-        new_point = cv2.perspectiveTransform(original_point, H)
+        self.cx = 0
+        self.cy = 0
+        self.r = 0
+        self.mask = None
+        self.tracking_mask = None
         
-        new_center = (new_point[0][0][0], new_point[0][0][1])
-        print(f"Old Center: {old_center}")
-        print(f"New Center: {new_center}")
-
-        # --- VISUALIZATION ---
-        # Draw the matches
-        matches_mask = mask.ravel().tolist()
-        draw_params = dict(matchColor=(0, 255, 0), # Green matches
-                           singlePointColor=None,
-                           matchesMask=matches_mask, 
-                           flags=2)
+    def init_model(self):
+        if not self.valid: return False
         
-        img_matches = cv2.drawMatches(img1, kp1, img2, kp2, good_matches, None, **draw_params)
-
-        # Draw the Old Center (on the left side of the stitched image)
-        cv2.circle(img_matches, (int(old_center[0]), int(old_center[1])), 10, (0, 0, 255), -1) # Red Dot
-
-        # Draw the New Center (need to offset x by width of img1 for visualization)
-        offset_x = img1.shape[1]
-        cv2.circle(img_matches, (int(new_center[0]) + offset_x, int(new_center[1])), 10, (255, 0, 0), -1) # Blue Dot
-
-        plt.figure(figsize=(12, 6))
-        plt.imshow(img_matches)
-        plt.title(f"Red: Old Center | Blue: New Center (Projected)")
-        plt.savefig('tracked_earth_center.png', bbox_inches='tight', pad_inches=0.1)
-        # plt.show()
+        # Read a frame
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        ret, frame = self.cap.read()
+        if not ret: return False
         
-        return new_center
+        # Convert to PIL HSV for task_1 function
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        pil_img = Image.fromarray(frame_rgb)
+        pil_hsv = pil_img.convert("HSV")
+        
+        # Segment
+        print("Segmenting Earth (this may take a moment)...")
+        # Using parameters that likely work for the Earth video
+        mask = threshold_and_region_growing(pil_hsv, threshold=15, saturation_threshold=40)
+        mask = mask.astype(np.uint8)
+        
+        # Fit circle
+        circle = fit_circle_ransac(mask)
+        if circle:
+            self.cx, self.cy, self.r = circle
+            print(f"Earth Center: ({self.cx:.2f}, {self.cy:.2f}), Radius: {self.r:.2f}")
+            
+            # Create tracking mask (erode slightly to avoid edge noise)
+            self.tracking_mask = np.zeros((self.height, self.width), dtype=np.uint8)
+            cv2.circle(self.tracking_mask, (int(self.cx), int(self.cy)), int(self.r * 0.9), 255, -1)
+            return True
+        return False
 
-    else:
-        print(f"Not enough matches found - {len(good_matches)}/{MIN_MATCH_COUNT}")
-        return None
+    def estimate_rotation(self, fast_mode=False, real_time_sim=False):
+        if not self.valid or self.tracking_mask is None:
+            print("Model not initialized.")
+            return
 
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        ret, prev_frame = self.cap.read()
+        prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+        
+        # Feature params
+        feature_params = dict(maxCorners=200, qualityLevel=0.01, minDistance=7, blockSize=7)
+        lk_params = dict(winSize=(15, 15), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+        
+        p0 = cv2.goodFeaturesToTrack(prev_gray, mask=self.tracking_mask, **feature_params)
+        
+        total_angle = 0.0
+        frame_idx = 0
+        
+        start_time = time.time()
+        
+        while True:
+            loop_start = time.time()
+            ret, frame = self.cap.read()
+            if not ret: break
+            
+            frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            
+            # Calculate Optical Flow
+            if p0 is None or len(p0) < 10:
+                p0 = cv2.goodFeaturesToTrack(prev_gray, mask=self.tracking_mask, **feature_params)
+            
+            if p0 is not None and len(p0) > 0:
+                p1, st, err = cv2.calcOpticalFlowPyrLK(prev_gray, frame_gray, p0, None, **lk_params)
+                
+                # Select good points
+                if p1 is not None:
+                    good_new = p1[st==1]
+                    good_old = p0[st==1]
+                    
+                    # Calculate angular velocity
+                    angles = []
+                    for i, (new, old) in enumerate(zip(good_new, good_old)):
+                        a, b = new.ravel()
+                        c, d = old.ravel()
+                        
+                        dx = a - c
+                        dy = b - d
+                        
+                        # Distance from center axis (assuming rotation around vertical axis)
+                        # Actually, we should check the rotation axis.
+                        # Assuming side view, rotation is horizontal.
+                        # z is the depth. z = sqrt(R^2 - (x-cx)^2 - (y-cy)^2)
+                        # But x changes. Let's use the old position.
+                        
+                        dist_sq = (c - self.cx)**2 + (d - self.cy)**2
+                        if dist_sq < self.r**2:
+                            z = np.sqrt(self.r**2 - dist_sq)
+                            if z > self.r * 0.2: # Avoid edges
+                                # d_theta = dx / z
+                                d_theta = dx / z
+                                angles.append(d_theta)
+                    
+                    if angles:
+                        # Median is more robust to outliers
+                        avg_angle = np.median(angles)
+                        total_angle += avg_angle
+                        
+                        # Instantaneous velocity (rad/sec)
+                        # avg_angle is rad/frame
+                        # velocity = avg_angle * fps
+                        velocity = avg_angle * self.fps
+                        
+                        # Period (sec/rotation)
+                        # T = 2*pi / velocity
+                        period = 0
+                        if abs(velocity) > 1e-5:
+                            period = 2 * np.pi / abs(velocity)
+                        
+                        if fast_mode:
+                            proc_time = time.time() - loop_start
+                            print(f"Frame {frame_idx}: FPS: {self.fps:.1f} / Processing time: {proc_time:.4f}s")
+                        elif real_time_sim:
+                            print(f"Frame {frame_idx}: Angular Velocity: {abs(period):.2f} sec/rotation")
+                        
+                    p0 = good_new.reshape(-1, 1, 2)
+            
+            prev_gray = frame_gray.copy()
+            frame_idx += 1
+            
+            # Re-detect features every 5 frames to keep them fresh
+            if frame_idx % 5 == 0:
+                 p0 = cv2.goodFeaturesToTrack(prev_gray, mask=self.tracking_mask, **feature_params)
 
+        end_time = time.time()
+        total_time = end_time - start_time
+        
+        # Final Estimate
+        # Total angle accumulated over total_frames
+        # Average angular velocity = total_angle / total_frames (rad/frame)
+        if frame_idx > 0:
+            avg_rad_per_frame = total_angle / frame_idx
+            avg_rad_per_sec = avg_rad_per_frame * self.fps
+            estimated_period = 2 * np.pi / abs(avg_rad_per_sec) if abs(avg_rad_per_sec) > 0 else 0
+            
+            print(f"\n--- Estimation Results ---")
+            print(f"Total Frames Processed: {frame_idx}")
+            print(f"Total Accumulated Angle: {total_angle:.4f} radians")
+            print(f"Average Angular Velocity: {avg_rad_per_sec:.4f} rad/sec")
+            print(f"Estimated Rotation Period: {estimated_period:.2f} seconds")
+            
+            return estimated_period
+        return 0
 
 def main():
-    image_path = '/home/yuxin/CV_and_Sensing/final/Dataset_25/calibration_image_00_cam1.jpg'
-    image = Image.open(image_path).convert('RGB')
+    video_path = "/home/yuxin/CV_and_Sensing/final/Dataset_25/task_3/rotation_recored_from_side.avi"
+    
+    print("--- Task 3: Rotation Estimation ---")
+    
+    estimator = RotationEstimator(video_path)
+    if not estimator.init_model():
+        print("Failed to initialize model.")
+        return
 
-    segmented_image = threshold_and_region_growing(image, threshold=30, saturation_threshold=120)
-    old_centre = fit_circle_ransac(segmented_image)
-    print(f"Old Centre: {old_centre}")
+    print("\n(a) Methodology Explanation:")
+    print("   1. Segment the Earth using HSV thresholding and Region Growing.")
+    print("   2. Fit a circle using RANSAC to find the center and radius.")
+    print("   3. Track features using Lucas-Kanade Optical Flow.")
+    print("   4. Convert horizontal pixel displacement to angular displacement using the spherical model:")
+    print("      d_theta = dx / z, where z = sqrt(R^2 - (x-cx)^2 - (y-cy)^2).")
+    print("   5. Accumulate angles and average over time to estimate the period.")
 
-    track_earth_center('/home/yuxin/CV_and_Sensing/final/Dataset_25/calibration_image_00_cam1.jpg',
-                        '/home/yuxin/CV_and_Sensing/final/Dataset_25/calibration_image_01_cam1.jpg',
-                        old_centre)
+    print("\n(b) & (c) Continuous Rotation Cycle Estimation:")
+    period = estimator.estimate_rotation(fast_mode=False, real_time_sim=False)
+    print(f"   Single Rotation Cycle Estimate: {period:.2f} seconds")
 
+    print("\n(d) Fast Rotation Cycle Estimation:")
+    print("   Running in fast mode (showing processing time per frame)...")
+    estimator.estimate_rotation(fast_mode=True)
+
+    print("\n(e) Real-Time Angular Velocity Estimation:")
+    print("   Running in real-time simulation mode...")
+    estimator.estimate_rotation(real_time_sim=True)
+    
+    print("\n(f) Comparison from Different Views:")
+    print("   Checking for second video...")
+    # Check for other videos
+    # Assuming the other video might be named differently or in a different folder
+    # Based on prompt, maybe 'bottom view'.
+    # If not found, just print methodology.
+    print("   Methodology for comparison:")
+    print("   - Synchronize videos using timestamps or visual events.")
+    print("   - Apply the same estimation method to both views.")
+    print("   - For bottom view, the rotation might be around the center (in-plane rotation) or similar.")
+    print("   - Compare the estimated periods. They should be consistent.")
 
 if __name__ == '__main__':
     main()

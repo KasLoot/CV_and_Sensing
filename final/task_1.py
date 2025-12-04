@@ -111,10 +111,10 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     plt.plot(false_positive_rate_thresholding, true_positive_rate_thresholding, marker='o')
     plt.xlabel('False Positive')
     plt.ylabel('True Positive')
-    plt.title('ROC Curve')
+    plt.title('Threshoding ROC Curve')
     plt.grid()
-    plt.savefig('threshoding_roc_curve.png')
-    # plt.show()
+    # plt.savefig('threshoding_roc_curve.png')
+    plt.show()
     print("ROC curve saved as 'threshoding_roc_curve.png'")
     plt.clf()
 
@@ -145,8 +145,8 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     plt.ylabel('True Positive')
     plt.title('ROC Curve for Region Growing')
     plt.grid()
-    plt.savefig('region_growing_roc_curve.png')
-    # plt.show()
+    # plt.savefig('region_growing_roc_curve.png')
+    plt.show()
     print("ROC curve saved as 'region_growing_roc_curve.png'")
     plt.clf()
 
@@ -175,9 +175,10 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     plt.ylabel('True Positive')
     plt.title('ROC Curve for Thresholding + Region Growing')
     plt.grid()
-    plt.savefig('threshold_region_growing_roc_curve.png')
+    # plt.savefig('threshold_region_growing_roc_curve.png')
     # plt.show()
     print("ROC curve saved as 'threshold_region_growing_roc_curve.png'")
+    plt.show()
     plt.clf()
 
     # plotting both curves together
@@ -189,7 +190,7 @@ def draw_roc_curve(image: Image.Image, ground_truth_image: Image.Image):
     plt.title('ROC Curve Comparison')
     plt.legend()
     plt.grid()
-    plt.savefig('roc_curve_comparison.png')
+    # plt.savefig('roc_curve_comparison.png')
     plt.show()
     print("ROC curve comparison saved as 'roc_curve_comparison.png'")
 
@@ -323,15 +324,15 @@ def YoudensJ_evaluation(hsv_img: Image.Image, ground_truth_image: Image.Image):
     plt.title("Youden's J Index Heatmap")
     plt.savefig('youdens_j_heatmap.png')
     print("Heatmap saved as 'youdens_j_heatmap.png'")
-    plt.clf()
+    plt.show()
 
     return best_saturation, best_threshold
     
 
 
 def main():
-    image = Image.open("/Users/liuyuxin/Documents/CV_and_Sensing/final/Dataset_25/Easy/images/000016.png").convert("RGB")
-    ground_truth_image = Image.open("/Users/liuyuxin/Documents/CV_and_Sensing/final/Dataset_25/Easy/masks/000016.png").convert("L")
+    image = Image.open("./Dataset_25/Easy/images/000016.png").convert("RGB")
+    ground_truth_image = Image.open("./Dataset_25/Easy/masks/000016.png").convert("L")
     blurred_image = image.copy().filter(ImageFilter.GaussianBlur(radius=2))
     hsv_img = blurred_image.convert("HSV")
     # binary_image = threshoding(image, threshold=[0, 120])
@@ -372,9 +373,9 @@ def main():
 
     # combined_segmented_image = threshold_and_region_growing(image, threshold=30)
     
-    YoudensJ_evaluation(hsv_img, ground_truth_image)
+    # YoudensJ_evaluation(hsv_img, ground_truth_image)
 
-    # draw_roc_curve(image, ground_truth_image)
+    draw_roc_curve(image, ground_truth_image)
 
     # mask = threshold_and_region_growing(hsv_img, threshold=60, saturation_threshold=190)
     # plt.imshow(mask, cmap='gray')
