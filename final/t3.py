@@ -220,12 +220,6 @@ def track_earth_center(img1_path, img2_path, old_center):
         print(f"Not enough matches found - {len(good_matches)}/{MIN_MATCH_COUNT}")
         return None
 
-# --- USAGE EXAMPLE ---
-# Replace with your actual image paths and the center coordinate you found via Region Growing
-# center_from_region_growing = (300, 250) 
-# new_coords = track_earth_center('earth_t0.jpg', 'earth_t1.jpg', center_from_region_growing)
-
-
 
 
 def main():
