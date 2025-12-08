@@ -178,7 +178,7 @@ def get_images_from_dir(image_dir) -> list[np.ndarray]:
     return bgr_images, gray_images, hsv_images
 
 
-def measure_swing():
+def measure_swing(sample_rate=100):
     images_dir = './Dataset_25/task_2/extracted_frames'
     bgr_images, gray_images, hsv_images = get_images_from_dir(images_dir)
 
@@ -244,6 +244,7 @@ def measure_swing():
     plt.figure(figsize=(10, 6))
     plt.imshow(cv2.cvtColor(ref_image, cv2.COLOR_BGR2RGB))
     plt.title('Center Trajectory')
+    plt.suptitle(f'Sample Rate: {1} in {sample_rate} frames')
     plt.axis('off')
     plt.savefig('task_2_centres_swing.png')
     plt.show()
@@ -561,7 +562,8 @@ def measure_distance():
     plt.show()
 
 if __name__ == "__main__":
-    # video_path = 'Dataset_25/f6.avi'
-    # video_to_frames(video_path, sample_rate=10)
-    # measure_swing()
+    video_path = 'Dataset_25/f6.avi'
+    sample_rate = 100
+    video_to_frames(video_path, sample_rate=sample_rate)
+    measure_swing(sample_rate=sample_rate)
     measure_distance()
