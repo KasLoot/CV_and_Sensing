@@ -114,14 +114,14 @@ def test_colour_thresholding(hsv_image, bgr_image, ground_mask):
     plt.title('Difference with Ground Truth')
     plt.imshow(colour_thresholding_difference, cmap='gray')
     plt.axis('off')
-    plt.savefig('colour_thresholding_demo.png')
-    # plt.show()
+    # plt.savefig('colour_thresholding_demo.png')
+    plt.show()
 
 
 def hough_circle_mask(gray_image, param1=50, param2=30, min_radius=300, max_radius=500, minDist=None):
     h, w = gray_image.shape
     if minDist is None:
-        minDist = h
+        minDist = max(h, w)
     
     if max_radius is None:
         max_radius = max(h, w) // 2
@@ -179,8 +179,8 @@ def test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2
     plt.title('Difference with Ground Truth')
     plt.imshow(hough_difference, cmap='gray')
     plt.axis('off')
-    plt.savefig('hough_circle_demo.png')
-    # plt.show()
+    # plt.savefig('hough_circle_demo.png')
+    plt.show()
 
     return hough_mask
 
@@ -573,22 +573,22 @@ def auc_evaluation(image_dir):
 def main():
 
     image_dir = './Dataset_25/Easy/'
-    sample_image_name = '000016.png'
+    sample_image_name = '000076.png'
     bgr_image = cv2.imread(f'{image_dir}/images/{sample_image_name}')
     blurred = cv2.GaussianBlur(bgr_image, (5, 5), 0)
     hsv_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
     gray_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
     ground_mask = cv2.imread(f'{image_dir}/masks/{sample_image_name}', cv2.IMREAD_GRAYSCALE)
 
-    # test_colour_thresholding(hsv_image, bgr_image, ground_mask)
-    # test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=300, max_radius=500)
-    # test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask)
+    test_colour_thresholding(hsv_image, bgr_image, ground_mask)
+    test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=300, max_radius=500)
+    test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask)
 
     # roc_curve(image_dir)
 
     # best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir)
 
-    auc_evaluation(image_dir)
+    # auc_evaluation(image_dir)
 
 
 
