@@ -582,7 +582,7 @@ def auc_evaluation(image_dir, save_dir=None):
 def main():
 
     image_dir = './Dataset_25/Easy/'
-    sample_image_name = '000076.png'
+    sample_image_name = '000016.png'
     bgr_image = cv2.imread(f'{image_dir}/images/{sample_image_name}')
     blurred = cv2.GaussianBlur(bgr_image, (5, 5), 0)
     hsv_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
