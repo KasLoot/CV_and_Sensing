@@ -534,21 +534,6 @@ def auc_evaluation(image_dir):
     # Calculate Youden's J for all points
     youdens_j = tpr - fpr
 
-    # Check specific parameters mentioned by user
-    target_hue = 55
-    target_param2 = 30
-    
-    if target_hue in colour_thresholding_hue_thresholds and target_param2 in hough_circle_param2_thresholds:
-        h_idx = list(colour_thresholding_hue_thresholds).index(target_hue)
-        p_idx = list(hough_circle_param2_thresholds).index(target_param2)
-        
-        print(f"\nStats for Hue={target_hue}, Param2={target_param2}:")
-        print(f"TPR: {tpr[h_idx, p_idx]:.4f}")
-        print(f"FPR: {fpr[h_idx, p_idx]:.4f}")
-        print(f"Youden's J: {youdens_j[h_idx, p_idx]:.4f}")
-    else:
-        print(f"\nTarget parameters Hue={target_hue}, Param2={target_param2} not in search grid.")
-
     best_idx = np.unravel_index(np.argmax(youdens_j), youdens_j.shape)
     best_hue = colour_thresholding_hue_thresholds[best_idx[0]]
     best_param2 = hough_circle_param2_thresholds[best_idx[1]]
@@ -604,9 +589,6 @@ def main():
     # best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir)
 
     auc_evaluation(image_dir)
-
-    test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask)
-
 
 
 
