@@ -504,7 +504,7 @@ def measure_distance():
     print(f"Number of zeros: {np.sum(estDisp == 0)}")
 
     depth = (f_pixel * baseline) / (estDisp + 1e-6)
-    real_depth = 20.4
+    real_depth = 21.4
 
     # Region around the bottle (adjust manually after viewing images)
     y1, y2 = int(250*scale), min(int(450*scale), estDisp.shape[0])
