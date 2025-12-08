@@ -4,6 +4,7 @@ import numpy as np
 import os
 from tqdm import tqdm
 import time
+import sys
 
 def crop_with_mask(img, mask, box):
     (x1, y1, x2, y2) = box
@@ -178,7 +179,7 @@ def get_images_from_dir(image_dir) -> list[np.ndarray]:
     return bgr_images, gray_images, hsv_images
 
 
-def measure_swing(sample_rate=100):
+def measure_swing(sample_rate=100, save_dir='./results/task_2'):
     images_dir = './Dataset_25/task_2/extracted_frames'
     bgr_images, gray_images, hsv_images = get_images_from_dir(images_dir)
 
@@ -228,7 +229,7 @@ def measure_swing(sample_rate=100):
     for i, centre in enumerate(centres):
         if centre is not None and ref_centre is not None:
             cv2.circle(ref_image, centre, 5, (0, 0, 255), -1)
-            cv2.line(ref_image, ref_centre, centre, (255, 0, 0), 2)
+            # cv2.line(ref_image, ref_centre, centre, (255, 0, 0), 2)
             
             # Calculate displacement from reference center
             dx = centre[0] - ref_centre[0]
@@ -246,7 +247,7 @@ def measure_swing(sample_rate=100):
     plt.title('Center Trajectory')
     plt.suptitle(f'Sample Rate: {1} in {sample_rate} frames')
     plt.axis('off')
-    plt.savefig('task_2_centres_swing.png')
+    plt.savefig(os.path.join(save_dir, 'task_2_centres_swing.png'))
     plt.show()
     
     # Total Displacement
@@ -257,7 +258,7 @@ def measure_swing(sample_rate=100):
     plt.ylabel('Distance (pixels)')
     plt.grid(True)
     plt.legend()
-    plt.savefig('task_2_movement_total_displacement.png')
+    plt.savefig(os.path.join(save_dir, 'task_2_movement_total_displacement.png'))
     plt.show()
 
     # X Displacement
@@ -268,7 +269,7 @@ def measure_swing(sample_rate=100):
     plt.ylabel('X Offset (pixels)')
     plt.grid(True)
     plt.legend()
-    plt.savefig('task_2_movement_x_displacement.png')
+    plt.savefig(os.path.join(save_dir, 'task_2_movement_x_displacement.png'))
     plt.show()
 
     # Y Displacement
@@ -279,7 +280,7 @@ def measure_swing(sample_rate=100):
     plt.ylabel('Y Offset (pixels)')
     plt.grid(True)
     plt.legend()
-    plt.savefig('task_2_movement_y_displacement.png')
+    plt.savefig(os.path.join(save_dir, 'task_2_movement_y_displacement.png'))
     plt.show()
 
 
@@ -406,8 +407,8 @@ def measure_distance():
 
 
     # Load images
-    left_img_path = "./Dataset_25/task_2/2c_00_cam2.jpg"
-    right_img_path = "./Dataset_25/task_2/2c_00_cam1.jpg"
+    left_img_path = "./Dataset_25/task_2/calibration_image_00_cam2.jpg"
+    right_img_path = "./Dataset_25/task_2/calibration_image_00_cam1.jpg"
 
     im1_color = cv2.imread(left_img_path)
     im2_color = cv2.imread(right_img_path)
@@ -426,8 +427,8 @@ def measure_distance():
     im2_distorted = apply_distortion(im2_original, camera_matrix_1, dist_coeffs_1)
 
     # Save distorted images
-    cv2.imwrite('task_2c_distorted_cam2_left.jpg', im1_distorted)
-    cv2.imwrite('task_2c_distorted_cam1_right.jpg', im2_distorted)
+    cv2.imwrite(os.path.join(save_dir, 'c/task_2c_distorted_cam2_left.jpg'), im1_distorted)
+    cv2.imwrite(os.path.join(save_dir, 'c/task_2c_distorted_cam1_right.jpg'), im2_distorted)
 
     # ===== DIAGNOSTIC CHECK: Show original vs distorted images =====
     print("\n===== Camera Setup Check =====")
@@ -503,7 +504,7 @@ def measure_distance():
     print(f"Number of zeros: {np.sum(estDisp == 0)}")
 
     depth = (f_pixel * baseline) / (estDisp + 1e-6)
-    real_depth = 20
+    real_depth = 20.4
 
     # Region around the bottle (adjust manually after viewing images)
     y1, y2 = int(250*scale), min(int(450*scale), estDisp.shape[0])
@@ -543,7 +544,7 @@ def measure_distance():
     plt.colorbar()
 
     plt.tight_layout()
-    plt.savefig('task_2c_distance_disparity_depth.png')
+    plt.savefig(os.path.join(save_dir, 'c/task_2c_distance_disparity_depth.png'))
     plt.show()
 
     # Individual plots
@@ -551,19 +552,37 @@ def measure_distance():
     plt.imshow(estDisp, cmap="gray")
     plt.colorbar()
     plt.title("Disparity")
-    plt.savefig('task_2c_distance_disparity.png')
+    plt.savefig(os.path.join(save_dir, 'c/task_2c_distance_disparity.png'))
     plt.show()
 
     plt.figure()
     plt.imshow(depth, cmap='jet', vmin=0, vmax=30)
     plt.colorbar()
     plt.title("Depth (meters)")
-    plt.savefig('task_2c_distance_depth.png')
+    plt.savefig(os.path.join(save_dir, 'c/task_2c_distance_depth.png'))
     plt.show()
 
+class Logger(object):
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "w")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
 if __name__ == "__main__":
-    video_path = 'Dataset_25/f6.avi'
+    video_path = './Dataset_25/task_2/6f.avi'
     sample_rate = 100
-    video_to_frames(video_path, sample_rate=sample_rate)
-    measure_swing(sample_rate=sample_rate)
+    save_dir = './results/task_2'
+    # video_to_frames(video_path, sample_rate=sample_rate)
+
+    os.makedirs(save_dir, exist_ok=True)
+    sys.stdout = Logger(os.path.join(save_dir, 'c/output.txt'))
+
+    measure_swing(sample_rate=sample_rate, save_dir=save_dir)
     measure_distance()
