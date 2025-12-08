@@ -78,7 +78,7 @@ def colour_thresholding_batch(batch_array, lower_bound, upper_bound):
     return np.array(processed_masks)
 
 
-def test_colour_thresholding(hsv_image, bgr_image, ground_mask):
+def test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=None):
     lower_bound = np.array([55, 15, 40])
     upper_bound = np.array([150, 255, 210])
     colour_thresholding_mask = colour_thresholding(
@@ -114,7 +114,8 @@ def test_colour_thresholding(hsv_image, bgr_image, ground_mask):
     plt.title('Difference with Ground Truth')
     plt.imshow(colour_thresholding_difference, cmap='gray')
     plt.axis('off')
-    # plt.savefig('colour_thresholding_demo.png')
+    if save_dir is not None:
+        plt.savefig(os.path.join(save_dir, 'colour_thresholding_demo.png'))
     plt.show()
 
 
@@ -150,7 +151,7 @@ def hough_circle_mask(gray_image, param1=50, param2=30, min_radius=300, max_radi
     return mask
 
 
-def test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=300, max_radius=500):
+def test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=300, max_radius=500, save_dir=None):
     hough_mask = hough_circle_mask(gray_image, param1=param1, param2=param2, min_radius=min_radius, max_radius=max_radius)
 
     tp = np.sum((hough_mask == 255) & (ground_mask == 255))
@@ -179,7 +180,8 @@ def test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2
     plt.title('Difference with Ground Truth')
     plt.imshow(hough_difference, cmap='gray')
     plt.axis('off')
-    # plt.savefig('hough_circle_demo.png')
+    if save_dir is not None:
+        plt.savefig(os.path.join(save_dir, 'hough_circle_demo.png'))
     plt.show()
 
     return hough_mask
@@ -197,7 +199,7 @@ def colour_thresholding_hough_circle(hsv_image, gray_image, lower_bound, upper_b
 
     return combined_mask
 
-def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask):
+def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask, save_dir=None):
     lower_bound = np.array([55, 15, 40])
     upper_bound = np.array([150, 255, 210])
     min_radius = 300
@@ -239,11 +241,12 @@ def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, grou
     plt.title('Difference with Ground Truth')
     plt.imshow(combined_difference, cmap='gray')
     plt.axis('off')
-    # plt.savefig('combined_demo.png')
+    if save_dir is not None:
+        plt.savefig(os.path.join(save_dir, 'colour_thresholding_hough_circle_demo.png'))
     plt.show()
 
 
-def roc_curve(images_dir):
+def roc_curve(images_dir, save_dir=None):
     colour_thresholding_hue_thresholds = range(0, 256, 5)
     tp_counts_colour_thresholding = np.zeros(len(colour_thresholding_hue_thresholds))
     tn_counts_colour_thresholding = np.zeros(len(colour_thresholding_hue_thresholds))
@@ -324,8 +327,9 @@ def roc_curve(images_dir):
     plt.ylabel('True Positive Rate')
     plt.title('Colour Thresholding ROC Curve')
     plt.legend()
-    plt.savefig('colour_thresholding_roc_curve.png')
-    print("Saved colour_thresholding_roc_curve.png")
+    if save_dir is not None:
+        plt.savefig(os.path.join(save_dir, 'colour_thresholding_roc_curve.png'))
+        print(f"Saved {os.path.join(save_dir, 'colour_thresholding_roc_curve.png')}")
     # plt.show()
     plt.close()
 
@@ -342,8 +346,9 @@ def roc_curve(images_dir):
     plt.ylabel('True Positive Rate')
     plt.title('Hough Circle ROC Curve')
     plt.legend()
-    plt.savefig('hough_circle_roc_curve.png')
-    print("Saved hough_circle_roc_curve.png")
+    if save_dir is not None:
+        plt.savefig(os.path.join(save_dir, 'hough_circle_roc_curve.png'))
+        print(f"Saved {os.path.join(save_dir, 'hough_circle_roc_curve.png')}")
     # plt.show()
     plt.close()
 
@@ -355,13 +360,14 @@ def roc_curve(images_dir):
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curve Comparison')
     plt.legend()
-    plt.savefig('roc_curve_comparison.png')
-    print("Saved roc_curve_comparison.png")
+    if save_dir is not None:
+        plt.savefig(os.path.join(save_dir, 'roc_curve_comparison.png'))
+        print(f"Saved {os.path.join(save_dir, 'roc_curve_comparison.png')}")
     # plt.show()
     plt.close()
 
 
-def YoudensJ_evaluation(image_dir):
+def YoudensJ_evaluation(image_dir, save_dir=None):
     colour_thresholding_hue_thresholds = range(0, 151, 15)
     # upper_bound = np.array([255, 255, 255])
     hough_circle_param2_thresholds = range(300, 0, -30)
@@ -432,8 +438,9 @@ def YoudensJ_evaluation(image_dir):
     plt.title("Youden's J Heatmap")
     plt.scatter([best_param2], [best_hue], color='blue', marker='x', s=100, label='Best Youden\'s J')
     plt.legend()
-    plt.savefig(f'youdens_j_heatmap_hue_{best_hue}_param2_{best_param2}.png')
-    print(f"Saved youdens_j_heatmap_hue_{best_hue}_param2_{best_param2}.png")
+    if save_dir is not None:
+        plt.savefig(os.path.join(save_dir, f'youdens_j_heatmap_hue_{best_hue}_param2_{best_param2}.png'))
+        print(f"Saved {os.path.join(save_dir, f'youdens_j_heatmap_hue_{best_hue}_param2_{best_param2}.png')}")
     # plt.show()
 
 
@@ -468,14 +475,15 @@ def YoudensJ_evaluation(image_dir):
     plt.title('Difference with Ground Truth')
     plt.imshow(combined_difference, cmap='gray')
     plt.axis('off')
-    plt.savefig('combined_best_youdens_j_demo.png')
-    print("Saved combined_best_youdens_j_demo.png")
+    if save_dir is not None:
+        plt.savefig(os.path.join(save_dir, 'combined_best_youdens_j_demo.png'))
+        print(f"Saved {os.path.join(save_dir, 'combined_best_youdens_j_demo.png')}")
     # plt.show()
 
     return best_index, best_hue, best_param2
 
 
-def auc_evaluation(image_dir):
+def auc_evaluation(image_dir, save_dir=None):
     colour_thresholding_hue_thresholds = range(0, 151, 5)
     hough_circle_param2_thresholds = range(300, 0, -10)
     upper_bound = np.array([150, 255, 210])
@@ -565,8 +573,9 @@ def auc_evaluation(image_dir):
     plt.title('ROC Curve (Grid Search over Hue & Param2)')
     plt.legend()
     plt.grid(True)
-    plt.savefig('auc_evaluation_roc.png')
-    print("Saved auc_evaluation_roc.png")
+    if save_dir is not None:
+        plt.savefig(os.path.join(save_dir, 'auc_evaluation_roc.png'))
+        print(f"Saved {os.path.join(save_dir, 'auc_evaluation_roc.png')}")
     # plt.show()
 
 
@@ -580,16 +589,20 @@ def main():
     gray_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
     ground_mask = cv2.imread(f'{image_dir}/masks/{sample_image_name}', cv2.IMREAD_GRAYSCALE)
 
-    test_colour_thresholding(hsv_image, bgr_image, ground_mask)
-    test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=300, max_radius=500)
-    test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask)
+    save_dir = './results/task_1/'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
-    # roc_curve(image_dir)
 
-    # best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir)
+    test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=save_dir)
+    test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=300, max_radius=500, save_dir=save_dir)
+    test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask, save_dir=save_dir)
 
-    # auc_evaluation(image_dir)
+    # roc_curve(image_dir, save_dir=save_dir)
 
+    # best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir, save_dir=save_dir)
+
+    # auc_evaluation(image_dir, save_dir=save_dir)
 
 
 if __name__ == '__main__':
