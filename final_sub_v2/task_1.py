@@ -97,7 +97,7 @@ def test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=None):
     acc = (tp + tn) / (tp + tn + fp + fn + 1e-6)
 
     # plt size
-    plt.figure(figsize=(15, 6))
+    plt.figure(figsize=(8, 6))
     plt.suptitle(f'Colour Thresholding\nLower: {lower_bound}, Upper: {upper_bound}\nTPR: {tpr:.4f}, FPR: {fpr:.4f}, Accuracy: {acc:.4f}', fontsize=14)
     plt.subplot(1, 3, 1)
     plt.title('Original Image')
@@ -163,7 +163,7 @@ def test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2
     fpr = fp / (fp + tn + 1e-6)
     acc = (tp + tn) / (tp + tn + fp + fn + 1e-6)
 
-    plt.figure(figsize=(15, 6))
+    plt.figure(figsize=(8, 6))
     plt.suptitle(f'Hough Circle Mask\nparam1: {param1}, param2: {param2}, min_r: {min_radius}, max_r: {max_radius}\nTPR: {tpr:.4f}, FPR: {fpr:.4f}, Accuracy: {acc:.4f}', fontsize=14)
     plt.subplot(1, 3, 1)
     plt.title('Original Image')
@@ -191,18 +191,31 @@ def colour_thresholding_hough_circle(hsv_image, gray_image, lower_bound, upper_b
     """Combine colour thresholding and Hough Circle Masking."""
     colour_mask = colour_thresholding(hsv_image, lower_bound, upper_bound)
 
-    # # Blur the binary mask to create gradients for HoughCircles
-    # colour_mask_blurred = cv2.GaussianBlur(colour_mask, (9, 9), 2)
+    # Blur the binary mask to create gradients for HoughCircles
+    colour_mask_blurred = cv2.GaussianBlur(colour_mask, (9, 9), 0)
 
-    hough_mask = hough_circle_mask(gray_image, param2=param2, min_radius=min_radius, max_radius=max_radius)
-    combined_mask = cv2.bitwise_or(colour_mask, hough_mask)
+    plt.subplot(1, 2, 1)
+    plt.title('Colour Mask')
+    plt.imshow(colour_mask, cmap='gray')
+    plt.axis('off')
+
+    plt.subplot(1, 2, 2)
+    plt.title('Blurred Colour Mask')
+    plt.imshow(colour_mask_blurred, cmap='gray')
+    plt.axis('off')
+    plt.show()
+
+
+    hough_mask = hough_circle_mask(colour_mask_blurred, param2=param2, min_radius=min_radius, max_radius=max_radius)
+    # combined_mask = cv2.bitwise_or(colour_mask, hough_mask)
+    combined_mask = hough_mask
 
     return combined_mask
 
 def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask, save_dir=None):
     lower_bound = np.array([55, 15, 40])
     upper_bound = np.array([150, 255, 210])
-    min_radius = 300
+    min_radius = 0
     max_radius = 500
 
     combined_mask = colour_thresholding_hough_circle(
@@ -224,7 +237,7 @@ def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, grou
     fpr = fp / (fp + tn + 1e-6)
     acc = (tp + tn) / (tp + tn + fp + fn + 1e-6)
 
-    plt.figure(figsize=(15, 6))
+    plt.figure(figsize=(8, 6))
     plt.suptitle(f'Combined Mask\nLower: {lower_bound}, Upper: {upper_bound}, min_r: {min_radius}, max_r: {max_radius}\nTPR: {tpr:.4f}, FPR: {fpr:.4f}, Accuracy: {acc:.4f}', fontsize=14)
     plt.subplot(1, 3, 1)
     plt.title('Original Image')
@@ -427,7 +440,7 @@ def YoudensJ_evaluation(image_dir, save_dir=None):
     print(f"Best Youden's J at Hue Threshold: {best_hue}, Hough Circle param2: {best_param2}, Youden's J: {youdens_j[best_index]}")
 
     # plot heatmap
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(8, 6))
     plt.imshow(youdens_j, cmap='hot', interpolation='nearest',
                extent=[hough_circle_param2_thresholds[-1], hough_circle_param2_thresholds[0],
                        colour_thresholding_hue_thresholds[0], colour_thresholding_hue_thresholds[-1]],
