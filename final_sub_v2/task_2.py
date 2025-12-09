@@ -579,7 +579,7 @@ if __name__ == "__main__":
     video_path = './Dataset_25/task_2/6f.avi'
     sample_rate = 100
     save_dir = './results/task_2'
-    # video_to_frames(video_path, sample_rate=sample_rate)
+    video_to_frames(video_path, sample_rate=sample_rate)
 
     os.makedirs(save_dir, exist_ok=True)
     sys.stdout = Logger(os.path.join(save_dir, 'c/output.txt'))
