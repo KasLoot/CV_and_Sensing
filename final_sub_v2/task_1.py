@@ -78,7 +78,7 @@ def colour_thresholding_batch(batch_array, lower_bound, upper_bound):
     return np.array(processed_masks)
 
 
-def test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=None):
+def test_colour_thresholding(hsv_image, bgr_image, ground_mask=None, save_dir=None):
     lower_bound = np.array([55, 15, 40])
     upper_bound = np.array([150, 255, 210])
     colour_thresholding_mask = colour_thresholding(
@@ -86,18 +86,19 @@ def test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=None):
         lower_bound=lower_bound,
         upper_bound=upper_bound
     )
+    if ground_mask is not None:
+        tp = np.sum((colour_thresholding_mask == 255) & (ground_mask == 255))
+        tn = np.sum((colour_thresholding_mask == 0) & (ground_mask == 0))
+        fp = np.sum((colour_thresholding_mask == 255) & (ground_mask == 0))
+        fn = np.sum((colour_thresholding_mask == 0) & (ground_mask == 255))
 
-    tp = np.sum((colour_thresholding_mask == 255) & (ground_mask == 255))
-    tn = np.sum((colour_thresholding_mask == 0) & (ground_mask == 0))
-    fp = np.sum((colour_thresholding_mask == 255) & (ground_mask == 0))
-    fn = np.sum((colour_thresholding_mask == 0) & (ground_mask == 255))
+        tpr = tp / (tp + fn + 1e-6)
+        fpr = fp / (fp + tn + 1e-6)
 
-    tpr = tp / (tp + fn + 1e-6)
-    fpr = fp / (fp + tn + 1e-6)
+        # plt size
+        plt.figure(figsize=(8, 6))
+        plt.suptitle(f'Colour Thresholding\nLower: {lower_bound}, Upper: {upper_bound}\nTPR: {tpr:.4f}, FPR: {fpr:.4f}', fontsize=14)
 
-    # plt size
-    plt.figure(figsize=(8, 6))
-    plt.suptitle(f'Colour Thresholding\nLower: {lower_bound}, Upper: {upper_bound}\nTPR: {tpr:.4f}, FPR: {fpr:.4f}', fontsize=14)
     plt.subplot(1, 3, 1)
     plt.title('Original Image')
     plt.imshow(cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB))
@@ -108,11 +109,12 @@ def test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=None):
     plt.imshow(colour_thresholding_mask, cmap='gray')
     plt.axis('off')
 
-    plt.subplot(1, 3, 3)
-    colour_thresholding_difference = cv2.absdiff(colour_thresholding_mask, ground_mask)
-    plt.title('Difference with Ground Truth')
-    plt.imshow(colour_thresholding_difference, cmap='gray')
-    plt.axis('off')
+    if ground_mask is not None:
+        plt.subplot(1, 3, 3)
+        colour_thresholding_difference = cv2.absdiff(colour_thresholding_mask, ground_mask)
+        plt.title('Difference with Ground Truth')
+        plt.imshow(colour_thresholding_difference, cmap='gray')
+        plt.axis('off')
     if save_dir is not None:
         plt.savefig(os.path.join(save_dir, 'colour_thresholding_demo.png'))
     plt.show()
@@ -150,19 +152,20 @@ def hough_circle_mask(gray_image, param1=50, param2=30, min_radius=300, max_radi
     return mask
 
 
-def test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=300, max_radius=500, save_dir=None):
+def test_hough_circle_mask(bgr_image, gray_image, ground_mask=None, param1=50, param2=30, min_radius=300, max_radius=500, save_dir=None):
     hough_mask = hough_circle_mask(gray_image, param1=param1, param2=param2, min_radius=min_radius, max_radius=max_radius)
+    if ground_mask is not None:
+        tp = np.sum((hough_mask == 255) & (ground_mask == 255))
+        tn = np.sum((hough_mask == 0) & (ground_mask == 0))
+        fp = np.sum((hough_mask == 255) & (ground_mask == 0))
+        fn = np.sum((hough_mask == 0) & (ground_mask == 255))
 
-    tp = np.sum((hough_mask == 255) & (ground_mask == 255))
-    tn = np.sum((hough_mask == 0) & (ground_mask == 0))
-    fp = np.sum((hough_mask == 255) & (ground_mask == 0))
-    fn = np.sum((hough_mask == 0) & (ground_mask == 255))
+        tpr = tp / (tp + fn + 1e-6)
+        fpr = fp / (fp + tn + 1e-6)
 
-    tpr = tp / (tp + fn + 1e-6)
-    fpr = fp / (fp + tn + 1e-6)
+        plt.figure(figsize=(8, 6))
+        plt.suptitle(f'Hough Circle Mask\nparam1: {param1}, param2: {param2}, min_r: {min_radius}, max_r: {max_radius}\nTPR: {tpr:.4f}, FPR: {fpr:.4f}', fontsize=14)
 
-    plt.figure(figsize=(8, 6))
-    plt.suptitle(f'Hough Circle Mask\nparam1: {param1}, param2: {param2}, min_r: {min_radius}, max_r: {max_radius}\nTPR: {tpr:.4f}, FPR: {fpr:.4f}', fontsize=14)
     plt.subplot(1, 3, 1)
     plt.title('Original Image')
     plt.imshow(cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB))
@@ -173,11 +176,12 @@ def test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2
     plt.imshow(hough_mask, cmap='gray')
     plt.axis('off')
 
-    plt.subplot(1, 3, 3)
-    hough_difference = cv2.absdiff(hough_mask, ground_mask)
-    plt.title('Difference with Ground Truth')
-    plt.imshow(hough_difference, cmap='gray')
-    plt.axis('off')
+    if ground_mask is not None:
+        plt.subplot(1, 3, 3)
+        hough_difference = cv2.absdiff(hough_mask, ground_mask)
+        plt.title('Difference with Ground Truth')
+        plt.imshow(hough_difference, cmap='gray')
+        plt.axis('off')
     if save_dir is not None:
         plt.savefig(os.path.join(save_dir, 'hough_circle_demo.png'))
     plt.show()
@@ -211,7 +215,7 @@ def colour_thresholding_hough_circle(hsv_image, gray_image, lower_bound, upper_b
 
     return combined_mask
 
-def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask, save_dir=None):
+def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask=None, save_dir=None):
     lower_bound = np.array([55, 15, 40])
     upper_bound = np.array([150, 255, 210])
     min_radius = 0
@@ -226,17 +230,18 @@ def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, grou
         min_radius=min_radius,
         max_radius=max_radius
     )
+    if ground_mask is not None:
+        tp = np.sum((combined_mask == 255) & (ground_mask == 255))
+        tn = np.sum((combined_mask == 0) & (ground_mask == 0))
+        fp = np.sum((combined_mask == 255) & (ground_mask == 0))
+        fn = np.sum((combined_mask == 0) & (ground_mask == 255))
 
-    tp = np.sum((combined_mask == 255) & (ground_mask == 255))
-    tn = np.sum((combined_mask == 0) & (ground_mask == 0))
-    fp = np.sum((combined_mask == 255) & (ground_mask == 0))
-    fn = np.sum((combined_mask == 0) & (ground_mask == 255))
+        tpr = tp / (tp + fn + 1e-6)
+        fpr = fp / (fp + tn + 1e-6)
 
-    tpr = tp / (tp + fn + 1e-6)
-    fpr = fp / (fp + tn + 1e-6)
+        plt.figure(figsize=(8, 6))
+        plt.suptitle(f'Combined Mask\nLower: {lower_bound}, Upper: {upper_bound}, min_r: {min_radius}, max_r: {max_radius}\nTPR: {tpr:.4f}, FPR: {fpr:.4f}', fontsize=14)
 
-    plt.figure(figsize=(8, 6))
-    plt.suptitle(f'Combined Mask\nLower: {lower_bound}, Upper: {upper_bound}, min_r: {min_radius}, max_r: {max_radius}\nTPR: {tpr:.4f}, FPR: {fpr:.4f}', fontsize=14)
     plt.subplot(1, 3, 1)
     plt.title('Original Image')
     plt.imshow(cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB))
@@ -247,11 +252,12 @@ def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, grou
     plt.imshow(combined_mask, cmap='gray')
     plt.axis('off')
 
-    plt.subplot(1, 3, 3)
-    combined_difference = cv2.absdiff(combined_mask, ground_mask)
-    plt.title('Difference with Ground Truth')
-    plt.imshow(combined_difference, cmap='gray')
-    plt.axis('off')
+    if ground_mask is not None:
+        plt.subplot(1, 3, 3)
+        combined_difference = cv2.absdiff(combined_mask, ground_mask)
+        plt.title('Difference with Ground Truth')
+        plt.imshow(combined_difference, cmap='gray')
+        plt.axis('off')
     if save_dir is not None:
         plt.savefig(os.path.join(save_dir, 'colour_thresholding_hough_circle_demo.png'))
     plt.show()
@@ -625,26 +631,15 @@ def auc_evaluation(image_dir, save_dir=None):
 
 def main():
 
-    image_dir = './Dataset_25/Medium/'
-    sample_image_name = '000056.png'
+    image_dir = './Dataset_25/Easy/'
+    sample_image_name = '000016.png'
     bgr_image = cv2.imread(f'{image_dir}/images/{sample_image_name}')
     blurred = cv2.GaussianBlur(bgr_image, (5, 5), 0)
     hsv_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
     gray_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
     ground_mask = cv2.imread(f'{image_dir}/masks/{sample_image_name}', cv2.IMREAD_GRAYSCALE)
 
-    save_dir = './results/task_1/'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-
-
-    test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=save_dir)
-    test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=300, max_radius=500, save_dir=save_dir)
-    test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask, save_dir=save_dir)
-
-    roc_curve(image_dir, save_dir=save_dir, dataset_name='Medium')
-
-    best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir="./Dataset_25/Easy/", save_dir=save_dir)
+    
 
     test_img_path = "./Dataset_25/calibration_image_02_cam2_t1d.jpg"
     test_img_path = "./Dataset_25/test_image_2.jpg"
@@ -654,7 +649,28 @@ def main():
     hsv_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2HSV)
     gray_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2GRAY)
 
-    test_1d_colour_thresholding_hough_circle(hsv_test_image, gray_test_image, bgr_test_image, save_dir=save_dir)
+
+    save_dir = './results/task_1/'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=save_dir)
+    test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=200, max_radius=500, save_dir=save_dir)
+    test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask, save_dir=save_dir)
+
+    save_dir = './results/task_1/test_image_2/'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    test_colour_thresholding(hsv_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
+    test_hough_circle_mask(bgr_test_image, gray_test_image, ground_mask=None, param1=50, param2=30, min_radius=200, max_radius=500, save_dir=save_dir)
+    test_colour_thresholding_hough_circle(hsv_test_image, gray_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
+
+    # roc_curve(image_dir, save_dir=save_dir, dataset_name='Medium')
+
+    # best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir="./Dataset_25/Easy/", save_dir=save_dir)
+
+    
+
+    # test_1d_colour_thresholding_hough_circle(hsv_test_image, gray_test_image, bgr_test_image, save_dir=save_dir)
 
     # auc_evaluation(image_dir, save_dir=save_dir)
 

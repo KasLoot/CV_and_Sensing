@@ -36,6 +36,7 @@ python task_1.py
 # Task 2
 `task_2.py` contains the implementation for Task 2: Measure the Projection Point of the Rotation Axis and the Height of the AO.
 - video_to_frames(video_path, sample_rate=sample_rate)
+- find_centre_demo()
 - measure_swing(sample_rate=sample_rate, save_dir=save_dir)
 - measure_distance()
 

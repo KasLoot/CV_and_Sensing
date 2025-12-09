@@ -575,14 +575,37 @@ class Logger(object):
         self.terminal.flush()
         self.log.flush()
 
+
+def find_centre_demo():
+    bgr_image = cv2.imread('./Dataset_25/task_2/extracted_frames/frame_0000.png')
+    gray_image = cv2.imread('./Dataset_25/task_2/extracted_frames/frame_0000.png', cv2.IMREAD_GRAYSCALE)
+    mask = hough_circle_mask(gray_image, param2=30, min_radius=100, max_radius=250)
+
+    centre = find_centre(mask)
+    print(f"Detected Centre: {centre}")
+
+    # Visualize
+    color_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+    if centre is not None:
+        cv2.circle(color_image, centre, 5, (255, 0, 0), -1)
+
+    plt.imshow(color_image)
+    plt.title('Detected Centre')
+    plt.axis('off')
+    plt.savefig('./results/task_2/detected_centre_demo.png')
+    plt.show()
+
+
 if __name__ == "__main__":
     video_path = './Dataset_25/task_2/6f.avi'
     sample_rate = 100
     save_dir = './results/task_2'
-    video_to_frames(video_path, sample_rate=sample_rate)
+    # video_to_frames(video_path, sample_rate=sample_rate)
 
-    os.makedirs(save_dir, exist_ok=True)
-    sys.stdout = Logger(os.path.join(save_dir, 'c/output.txt'))
+    # os.makedirs(save_dir, exist_ok=True)
+    # sys.stdout = Logger(os.path.join(save_dir, 'c/output.txt'))
 
-    measure_swing(sample_rate=sample_rate, save_dir=save_dir)
-    measure_distance()
+    find_centre_demo()
+
+    # measure_swing(sample_rate=sample_rate, save_dir=save_dir)
+    # measure_distance()
