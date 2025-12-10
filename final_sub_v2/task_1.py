@@ -263,10 +263,10 @@ def test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, grou
     plt.show()
 
 
-def test_1d_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, save_dir=None):
-    lower_bound = np.array([35, 0, 0])
+def test_1d_colour_thresholding_hough_circle(hue, param2, hsv_image, gray_image, bgr_image, save_dir=None):
+    lower_bound = np.array([hue, 0, 0])
     upper_bound = np.array([255, 255, 255])
-    min_radius = 300
+    min_radius = 0
     max_radius = 500
 
     combined_mask = colour_thresholding_hough_circle(
@@ -274,7 +274,7 @@ def test_1d_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, s
         gray_image,
         lower_bound=lower_bound,
         upper_bound=upper_bound,
-        param2=20,
+        param2=param2,
         min_radius=min_radius,
         max_radius=max_radius
     )
@@ -292,7 +292,7 @@ def test_1d_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, s
     plt.axis('off')
 
     if save_dir is not None:
-        plt.savefig(os.path.join(save_dir, '1d_test_image_mask.png'))
+        plt.savefig(os.path.join(save_dir, '1d_test_image_demo.png'))
     plt.show()
 
 
@@ -371,8 +371,14 @@ def roc_curve(images_dir, save_dir=None, dataset_name=None):
     tp_rate_colour_thresholding = tp_counts_colour_thresholding / (tp_counts_colour_thresholding + fn_counts_colour_thresholding + 1e-6)
     fp_rate_colour_thresholding = fp_counts_colour_thresholding / (fp_counts_colour_thresholding + tn_counts_colour_thresholding + 1e-6)
 
+    # Calculate AUC for Colour Thresholding
+    sorted_indices_colour = np.argsort(fp_rate_colour_thresholding)
+    fpr_sorted_colour = fp_rate_colour_thresholding[sorted_indices_colour]
+    tpr_sorted_colour = tp_rate_colour_thresholding[sorted_indices_colour]
+    auc_colour = np.trapz(tpr_sorted_colour, fpr_sorted_colour)
+
     plt.figure()
-    plt.plot(fp_rate_colour_thresholding, tp_rate_colour_thresholding, label='Colour Thresholding ROC', color='blue')
+    plt.plot(fp_rate_colour_thresholding, tp_rate_colour_thresholding, label=f'Colour Thresholding ROC (AUC = {auc_colour:.4f})', color='blue')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title(f'Colour Thresholding ROC Curve - {dataset_name}')
@@ -388,10 +394,17 @@ def roc_curve(images_dir, save_dir=None, dataset_name=None):
 
     tp_rate_hough_circle = tp_counts_hough_circle / (tp_counts_hough_circle + fn_counts_hough_circle + 1e-6)
     fp_rate_hough_circle = fp_counts_hough_circle / (fp_counts_hough_circle + tn_counts_hough_circle + 1e-6)
+    
+    # Calculate AUC for Hough Circle
+    sorted_indices_hough = np.argsort(fp_rate_hough_circle)
+    fpr_sorted_hough = fp_rate_hough_circle[sorted_indices_hough]
+    tpr_sorted_hough = tp_rate_hough_circle[sorted_indices_hough]
+    auc_hough = np.trapz(tpr_sorted_hough, fpr_sorted_hough)
+    
     print("Hough Circle TP Rates:\n", tp_rate_hough_circle)
     print("Hough Circle FP Rates:\n", fp_rate_hough_circle)
     plt.figure()
-    plt.plot(fp_rate_hough_circle, tp_rate_hough_circle, label='Hough Circle ROC', color='orange')
+    plt.plot(fp_rate_hough_circle, tp_rate_hough_circle, label=f'Hough Circle ROC (AUC = {auc_hough:.4f})', color='orange')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title(f'Hough Circle ROC Curve - {dataset_name}')
@@ -404,8 +417,8 @@ def roc_curve(images_dir, save_dir=None, dataset_name=None):
 
     # Combine both ROC curves
     plt.figure()
-    plt.plot(fp_rate_colour_thresholding, tp_rate_colour_thresholding, label='Colour Thresholding ROC', color='blue')
-    plt.plot(fp_rate_hough_circle, tp_rate_hough_circle, label='Hough Circle ROC', color='orange')
+    plt.plot(fp_rate_colour_thresholding, tp_rate_colour_thresholding, label=f'Colour Thresholding ROC (AUC = {auc_colour:.4f})', color='blue')
+    plt.plot(fp_rate_hough_circle, tp_rate_hough_circle, label=f'Hough Circle ROC (AUC = {auc_hough:.4f})', color='orange')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title(f'ROC Curve Comparison - {dataset_name}')
@@ -418,7 +431,7 @@ def roc_curve(images_dir, save_dir=None, dataset_name=None):
 
 
 def YoudensJ_evaluation(image_dir, save_dir=None):
-    colour_thresholding_hue_thresholds = range(0, 50, 5)
+    colour_thresholding_hue_thresholds = range(0, 155, 5)
     # upper_bound = np.array([255, 255, 255])
     hough_circle_param2_thresholds = range(50, 0, -5)
     # lower_bound = np.array([55, 15, 40])
@@ -459,7 +472,7 @@ def YoudensJ_evaluation(image_dir, save_dir=None):
                     lower_bound,
                     upper_bound,
                     param2=param2,
-                    min_radius=300,
+                    min_radius=0,
                     max_radius=500
                 )
                 tp = np.sum((combined_mask == 255) & (ground_mask == 255))
@@ -647,13 +660,13 @@ def main():
     # test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask, save_dir=save_dir)
 
 
-    # test_img_path = "./Dataset_25/calibration_image_02_cam2_t1d.jpg"
+    test_img_path = "./Dataset_25/calibration_image_02_cam2_t1d.jpg"
     # test_img_path = "./Dataset_25/test_image_2.jpg"
 
-    # bgr_test_image = cv2.imread(test_img_path)
-    # blurred_test_image = cv2.GaussianBlur(bgr_test_image, (5, 5), 0)
-    # hsv_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2HSV)
-    # gray_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2GRAY)
+    bgr_test_image = cv2.imread(test_img_path)
+    blurred_test_image = cv2.GaussianBlur(bgr_test_image, (5, 5), 0)
+    hsv_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2HSV)
+    gray_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2GRAY)
 
     # save_dir = './results/task_1/test_image_2/'
     # if not os.path.exists(save_dir):
@@ -667,14 +680,13 @@ def main():
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    roc_curve(image_dir, save_dir=save_dir, dataset_name='task_1_selected')
+    # roc_curve(image_dir, save_dir=save_dir, dataset_name='task_1_selected')
 
-    # best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir="./Dataset_25/Easy/", save_dir=save_dir)
+    # best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir="./Dataset_25/task_1_selected/", save_dir=save_dir)
 
     
 
-    # test_1d_colour_thresholding_hough_circle(hsv_test_image, gray_test_image, bgr_test_image, save_dir=save_dir)
-
+    test_1d_colour_thresholding_hough_circle(hue=95, param2=25, hsv_image=hsv_test_image, gray_image=gray_test_image, bgr_image=bgr_test_image, save_dir=save_dir)
     # auc_evaluation(image_dir, save_dir=save_dir)
 
 
