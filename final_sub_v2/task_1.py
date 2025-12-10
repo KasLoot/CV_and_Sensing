@@ -303,7 +303,7 @@ def roc_curve(images_dir, save_dir=None, dataset_name=None):
     fp_counts_colour_thresholding = np.zeros(len(colour_thresholding_hue_thresholds))
     fn_counts_colour_thresholding = np.zeros(len(colour_thresholding_hue_thresholds))
 
-    hough_circle_param2_thresholds = range(300, 0, -30)
+    hough_circle_param2_thresholds = range(300, 0, -15)
     tp_counts_hough_circle = np.zeros(len(hough_circle_param2_thresholds))
     tn_counts_hough_circle = np.zeros(len(hough_circle_param2_thresholds))
     fp_counts_hough_circle = np.zeros(len(hough_circle_param2_thresholds))
@@ -631,40 +631,43 @@ def auc_evaluation(image_dir, save_dir=None):
 
 def main():
 
-    image_dir = './Dataset_25/Easy/'
-    sample_image_name = '000016.png'
-    bgr_image = cv2.imread(f'{image_dir}/images/{sample_image_name}')
-    blurred = cv2.GaussianBlur(bgr_image, (5, 5), 0)
-    hsv_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-    gray_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
-    ground_mask = cv2.imread(f'{image_dir}/masks/{sample_image_name}', cv2.IMREAD_GRAYSCALE)
+    image_dir = './Dataset_25/task_1_selected/'
+    # sample_image_name = '000016.png'
+    # bgr_image = cv2.imread(f'{image_dir}/images/{sample_image_name}')
+    # blurred = cv2.GaussianBlur(bgr_image, (5, 5), 0)
+    # hsv_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+    # gray_image = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
+    # ground_mask = cv2.imread(f'{image_dir}/masks/{sample_image_name}', cv2.IMREAD_GRAYSCALE)
 
-    
-
-    test_img_path = "./Dataset_25/calibration_image_02_cam2_t1d.jpg"
-    test_img_path = "./Dataset_25/test_image_2.jpg"
-
-    bgr_test_image = cv2.imread(test_img_path)
-    blurred_test_image = cv2.GaussianBlur(bgr_test_image, (5, 5), 0)
-    hsv_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2HSV)
-    gray_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2GRAY)
+    # save_dir = './results/task_1/'
+    # if not os.path.exists(save_dir):
+    #     os.makedirs(save_dir)
+    # test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=save_dir)
+    # test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=200, max_radius=500, save_dir=save_dir)
+    # test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask, save_dir=save_dir)
 
 
-    save_dir = './results/task_1/'
+    # test_img_path = "./Dataset_25/calibration_image_02_cam2_t1d.jpg"
+    # test_img_path = "./Dataset_25/test_image_2.jpg"
+
+    # bgr_test_image = cv2.imread(test_img_path)
+    # blurred_test_image = cv2.GaussianBlur(bgr_test_image, (5, 5), 0)
+    # hsv_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2HSV)
+    # gray_test_image = cv2.cvtColor(blurred_test_image, cv2.COLOR_BGR2GRAY)
+
+    # save_dir = './results/task_1/test_image_2/'
+    # if not os.path.exists(save_dir):
+    #     os.makedirs(save_dir)
+    # test_colour_thresholding(hsv_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
+    # test_hough_circle_mask(bgr_test_image, gray_test_image, ground_mask=None, param1=50, param2=30, min_radius=200, max_radius=500, save_dir=save_dir)
+    # test_colour_thresholding_hough_circle(hsv_test_image, gray_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
+
+
+    save_dir = './results/task_1/task_1_selected/'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    test_colour_thresholding(hsv_image, bgr_image, ground_mask, save_dir=save_dir)
-    test_hough_circle_mask(bgr_image, gray_image, ground_mask, param1=50, param2=30, min_radius=200, max_radius=500, save_dir=save_dir)
-    test_colour_thresholding_hough_circle(hsv_image, gray_image, bgr_image, ground_mask, save_dir=save_dir)
 
-    save_dir = './results/task_1/test_image_2/'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    test_colour_thresholding(hsv_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
-    test_hough_circle_mask(bgr_test_image, gray_test_image, ground_mask=None, param1=50, param2=30, min_radius=200, max_radius=500, save_dir=save_dir)
-    test_colour_thresholding_hough_circle(hsv_test_image, gray_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
-
-    # roc_curve(image_dir, save_dir=save_dir, dataset_name='Medium')
+    roc_curve(image_dir, save_dir=save_dir, dataset_name='task_1_selected')
 
     # best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir="./Dataset_25/Easy/", save_dir=save_dir)
 
