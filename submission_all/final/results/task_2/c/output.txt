@@ -1,0 +1,25 @@
+===== Applying Distortion =====
+Distorting Camera 2 (left image)...
+Applying distortion with k1=0.0565, k2=-0.1061
+Distorting Camera 1 (right image)...
+Applying distortion with k1=0.4745, k2=-1.3516
+
+===== Camera Setup Check =====
+Original: (720, 1280)
+Resized: (252, 448)
+Using f_pixel = 374.3807025
+Computing Disparity Done: 2.056497292000131 sec
+
+===== Disparity Info =====
+estDisp shape: (252, 368)
+estDisp min/max: 0.00 / 79.00
+estDisp mean: 29.70
+estDisp median: 24.00
+Number of zeros: 13078
+
+===== ROI Coordinates =====
+Scaled ROI: y[87:157], x[227:262]
+Median disparity in ROI: 29.00
+Estimated Depth: 19.468m
+Real Depth: 21.4m
+Error: 1.932m
