@@ -9,4 +9,4 @@ captured_videos/
 
 backup/
 .venv/
-final_sub_v2/Dataset_25/
+**/Dataset_25/
