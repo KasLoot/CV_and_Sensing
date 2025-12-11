@@ -396,7 +396,7 @@ def measure_distance():
     plt.title('DISTORTED - RIGHT Camera (cam1)')
 
     plt.tight_layout()
-    plt.savefig('task_2c_distortion_check.png')
+    plt.savefig(os.path.join(save_dir, 'c/task_2c_distortion_check.png'))
     plt.show()
 
 
@@ -547,10 +547,12 @@ if __name__ == "__main__":
     save_dir = './results/task_2'
     # video_to_frames(video_path, sample_rate=sample_rate)
 
-    # os.makedirs(save_dir, exist_ok=True)
-    # sys.stdout = Logger(os.path.join(save_dir, 'c/output.txt'))
+    os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(os.path.join(save_dir, 'c'), exist_ok=True)
 
     find_centre_demo()
 
-    # measure_swing(sample_rate=sample_rate, save_dir=save_dir)
-    # measure_distance()
+    measure_swing(sample_rate=sample_rate, save_dir=save_dir)
+    sys.stdout = Logger(os.path.join(save_dir, 'c/output.txt'))
+
+    measure_distance()
