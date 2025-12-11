@@ -51,10 +51,7 @@ def dynamicProgramVec(unaryCosts, pairwiseCosts):
     return bestPath
 
 
-def apply_distortion(img, camera_matrix, dist_coeffs):
-    """
-    Apply distortion to an image based on camera parameters
-    """
+def apply_undistortion(img, camera_matrix, dist_coeffs):
     h, w = img.shape[:2]
     
     # Create map for distortion
@@ -69,7 +66,6 @@ def apply_distortion(img, camera_matrix, dist_coeffs):
     
     k1, k2, p1, p2, k3 = dist_coeffs[0], dist_coeffs[1], dist_coeffs[2], dist_coeffs[3], dist_coeffs[4]
     
-    print(f"Applying distortion with k1={k1:.4f}, k2={k2:.4f}")
     
     # For each pixel in the output (distorted) image
     for v in range(h):
@@ -90,18 +86,18 @@ def apply_distortion(img, camera_matrix, dist_coeffs):
             dx = 2*p1*x*y + p2*(r2 + 2*x*x)
             dy = p1*(r2 + 2*y*y) + 2*p2*x*y
             
-            # Apply distortion
-            x_distorted = x * radial + dx
-            y_distorted = y * radial + dy
+            # Apply undistortion
+            x_undistorted = x * radial + dx
+            y_undistorted = y * radial + dy
             
             # Convert back to pixel coordinates
-            map_x[v, u] = x_distorted * fx + cx
-            map_y[v, u] = y_distorted * fy + cy
+            map_x[v, u] = x_undistorted * fx + cx
+            map_y[v, u] = y_undistorted * fy + cy
     
-    # Apply the distortion mapping
-    distorted_img = cv2.remap(img, map_x, map_y, cv2.INTER_LINEAR)
+    # Apply the undistortion mapping
+    undistorted_img = cv2.remap(img, map_x, map_y, cv2.INTER_LINEAR)
     
-    return distorted_img
+    return undistorted_img
 
 
 # Camera 1 Intrinsics from your MATLAB output
@@ -137,17 +133,9 @@ im2_original = cv2.imread(right_img_path, cv2.IMREAD_GRAYSCALE)
 if im1_original is None or im2_original is None:
     raise FileNotFoundError("Images not found")
 
-# ===== APPLY DISTORTION HERE =====
-print("\n===== Applying Distortion =====")
-print("Distorting Camera 2 (left image)...")
-im1_distorted = apply_distortion(im1_original, camera_matrix_2, dist_coeffs_2)
-
-print("Distorting Camera 1 (right image)...")
-im2_distorted = apply_distortion(im2_original, camera_matrix_1, dist_coeffs_1)
-
-# Save distorted images
-cv2.imwrite('distorted_cam2_left.jpg', im1_distorted)
-cv2.imwrite('distorted_cam1_right.jpg', im2_distorted)
+# undistortion
+im1_undistorted = apply_undistortion(im1_original, camera_matrix_2, dist_coeffs_2)
+im2_undistorted = apply_undistortion(im2_original, camera_matrix_1, dist_coeffs_1)
 
 #===== DIAGNOSTIC CHECK: Show original vs distorted images =====
 plt.figure(figsize=(14, 10))
@@ -161,11 +149,11 @@ plt.imshow(cv2.cvtColor(im2_color, cv2.COLOR_BGR2RGB))
 plt.title('ORIGINAL - RIGHT Camera (cam1)')
 
 plt.subplot(2, 2, 3)
-plt.imshow(im1_distorted, cmap='gray')
+plt.imshow(im1_undistorted, cmap='gray')
 plt.title('UNDISTORTED - LEFT Camera (cam2)')
 
 plt.subplot(2, 2, 4)
-plt.imshow(im2_distorted, cmap='gray')
+plt.imshow(im2_undistorted, cmap='gray')
 plt.title('UNDISTORTED - RIGHT Camera (cam1)')
 
 plt.tight_layout()
@@ -173,8 +161,8 @@ plt.show()
 
 
 # Use distorted images for stereo matching
-im1 = im1_distorted
-im2 = im2_distorted
+im1 = im1_undistorted
+im2 = im2_undistorted
 
 # Convert to float
 im1 = im1.astype(np.float32)
@@ -184,9 +172,7 @@ print("Original:", im1.shape)
 
 
 imY, imX = im1.shape
-print("Resized:", im1.shape)
-f_pixel = (1054.9526+1084.3657)/2
-#f_pixel = 1084 * scale         
+f_pixel = (1054.9526+1084.3657)/2       
 baseline = 1.508              
 
 print("Using f_pixel =", f_pixel)
@@ -215,12 +201,10 @@ print(f"estDisp median: {np.median(estDisp):.2f}")
 depth = (f_pixel * baseline) / (estDisp + 1e-6)
 real_depth = 21.4
 
-# Region around the bottle (adjust manually after viewing images)
+# ROI
 y1, y2 = 250, min(450, estDisp.shape[0])
 x1, x2 = 600, min(800, estDisp.shape[1])
 
-print(f"\n===== ROI Coordinates =====")
-print(f"Scaled ROI: y[{y1}:{y2}], x[{x1}:{x2}]")
 roi_disparity = estDisp[y1:y2, x1:x2]
 
 valid_disparities = roi_disparity
@@ -235,42 +219,12 @@ print(f"Error: {abs(estimated_depth - real_depth):.3f}m")
 
 
 # Visualization with ROI
-plt.figure(figsize=(15, 5))
-
-plt.subplot(1, 3, 1)
-plt.imshow(im1, cmap='gray')
-# Draw ROI rectangle on left image
-rect = plt.Rectangle((x1, y1), x2-x1, y2-y1, fill=False, edgecolor='red', linewidth=2)
-plt.gca().add_patch(rect)
-plt.title('Left Image (undistorted & processed)')
-plt.colorbar()
-
-plt.subplot(1, 3, 2)
-plt.imshow(estDisp, cmap='jet')
-# Draw ROI rectangle on disparity map
-rect = plt.Rectangle((x1, y1), x2-x1, y2-y1, fill=False, edgecolor='red', linewidth=2)
-plt.gca().add_patch(rect)
-plt.title('Disparity Map')
-plt.colorbar()
-
-plt.subplot(1, 3, 3)
-plt.imshow(depth, cmap='jet', vmin=0, vmax=30)
-# Draw ROI rectangle on depth map
-rect = plt.Rectangle((x1, y1), x2-x1, y2-y1, fill=False, edgecolor='red', linewidth=2)
-plt.gca().add_patch(rect)
-plt.title('Depth Map (0-30m)')
-plt.colorbar()
-
-plt.tight_layout()
-plt.show()
-
-# Individual plots with ROI
 plt.figure()
 plt.imshow(estDisp, cmap="gray")
 rect = plt.Rectangle((x1, y1), x2-x1, y2-y1, fill=False, edgecolor='red', linewidth=2)
 plt.gca().add_patch(rect)
 plt.colorbar()
-plt.title("Disparity with ROI")
+plt.title("Disparity")
 plt.show()
 
 plt.figure()
@@ -278,6 +232,6 @@ plt.imshow(depth, cmap='jet', vmin=0, vmax=30)
 rect = plt.Rectangle((x1, y1), x2-x1, y2-y1, fill=False, edgecolor='red', linewidth=2)
 plt.gca().add_patch(rect)
 plt.colorbar()
-plt.title("Depth (meters) with ROI")
+plt.title("Depth (meters)")
 plt.show()
 
