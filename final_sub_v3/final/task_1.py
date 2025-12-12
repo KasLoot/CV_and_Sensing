@@ -670,32 +670,32 @@ def main():
     save_dir = './results/task_1/self_captured_image/'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    # test_colour_thresholding(hsv_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
-    # test_hough_circle_mask(bgr_test_image, gray_test_image, ground_mask=None, param1=50, param2=30, min_radius=200, max_radius=500, save_dir=save_dir)
-    # test_colour_thresholding_hough_circle(hsv_test_image, gray_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
+    test_colour_thresholding(hsv_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
+    test_hough_circle_mask(bgr_test_image, gray_test_image, ground_mask=None, param1=50, param2=30, min_radius=200, max_radius=500, save_dir=save_dir)
+    test_colour_thresholding_hough_circle(hsv_test_image, gray_test_image, bgr_test_image, ground_mask=None, save_dir=save_dir)
 
 
-    # selected_save_dir = './results/task_1/task_1_selected/'
-    # if not os.path.exists(selected_save_dir):
-    #     os.makedirs(selected_save_dir)
-    # Easy_save_dir = './results/task_1/Easy/'
-    # if not os.path.exists(Easy_save_dir):
-    #     os.makedirs(Easy_save_dir)
-    # Medium_save_dir = './results/task_1/Medium/'
-    # if not os.path.exists(Medium_save_dir):
-    #     os.makedirs(Medium_save_dir)
-    # Hard_save_dir = './results/task_1/Hard/'
-    # if not os.path.exists(Hard_save_dir):
-    #     os.makedirs(Hard_save_dir)
+    selected_save_dir = './results/task_1/task_1_selected/'
+    if not os.path.exists(selected_save_dir):
+        os.makedirs(selected_save_dir)
+    Easy_save_dir = './results/task_1/Easy/'
+    if not os.path.exists(Easy_save_dir):
+        os.makedirs(Easy_save_dir)
+    Medium_save_dir = './results/task_1/Medium/'
+    if not os.path.exists(Medium_save_dir):
+        os.makedirs(Medium_save_dir)
+    Hard_save_dir = './results/task_1/Hard/'
+    if not os.path.exists(Hard_save_dir):
+        os.makedirs(Hard_save_dir)
 
 
-    # roc_curve("./Dataset_25/Easy/", save_dir=Easy_save_dir, dataset_name='Easy')
-    # roc_curve("./Dataset_25/Medium/", save_dir=Medium_save_dir, dataset_name='Medium')
-    # roc_curve("./Dataset_25/Hard/", save_dir=Hard_save_dir, dataset_name='Hard')
+    roc_curve("./Dataset_25/Easy/", save_dir=Easy_save_dir, dataset_name='Easy')
+    roc_curve("./Dataset_25/Medium/", save_dir=Medium_save_dir, dataset_name='Medium')
+    roc_curve("./Dataset_25/Hard/", save_dir=Hard_save_dir, dataset_name='Hard')
 
 
 
-    # best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir="./Dataset_25/task_1_selected/", save_dir=selected_save_dir)
+    best_jouden_index, best_hue, best_param2 = YoudensJ_evaluation(image_dir="./Dataset_25/task_1_selected/", save_dir=selected_save_dir)
 
     
 
