@@ -10,3 +10,5 @@ captured_videos/
 backup/
 .venv/
 **/Dataset_25/
+
+*.zip
